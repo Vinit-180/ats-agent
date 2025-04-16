@@ -125,19 +125,21 @@ def convert_drive_link(link: str) -> str:
         return f"https://drive.google.com/uc?export=download&id={file_id}"
     return link  # If not a drive link, return as-is
 
-def get_valid_pdf_url(original_url: str) -> str:
+def get_valid_pdf_url(original_url: str) -> tuple[str, bool]:
     """
     If the original URL is not valid, attempt to normalize and retry.
+    Returns a tuple of (url, is_valid).
     """
     if is_valid_pdf_url(original_url):
-        return original_url
+        return original_url, True
 
     normalized_url = normalize_drive_link(original_url)
     print(normalized_url)
     if is_valid_pdf_url(normalized_url):
-        return normalized_url
+        return normalized_url, True
 
-    raise ValueError("❌ Unable to fetch a valid PDF from the provided URL.")
+    print("❌ Unable to fetch a valid PDF from the provided URL.")
+    return original_url, False
 
 
 def download_pdf_from_drive(drive_url: str):
@@ -173,20 +175,22 @@ def evaluate_multiple_resumes(payload: ResumeURLsRequest):
         results: List[Dict] = []
 
         for url in payload.resume_urls:
+            print(url)
             try:
-                valid_url = get_valid_pdf_url(url)
-            except Exception as e:
-                print(e)
-                result.update({
-                        "status": "Invalid Link",
+                valid_url, is_valid = get_valid_pdf_url(url)
+                result = {"url": valid_url}
+                
+                if not is_valid:
+                    result.update({
+                        "status": "Invalid PDF URL",
                         "score": None,
                         "email": None
                     })
-                results.append(result)
-                continue
-            result = {"url": valid_url}
-            try:
+                    results.append(result)
+                    continue
+
                 response = download_pdf_from_drive(url)
+                print("pdf response",response)
                 if response==None:
                     result.update({
                         "status": "Failed to download PDF",
