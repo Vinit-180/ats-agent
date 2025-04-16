@@ -177,7 +177,13 @@ def evaluate_multiple_resumes(payload: ResumeURLsRequest):
                 valid_url = get_valid_pdf_url(url)
             except Exception as e:
                 print(e)
-                return {"error": f"Invalid url {e}"}
+                result.update({
+                        "status": "Invalid Link",
+                        "score": None,
+                        "email": None
+                    })
+                results.append(result)
+                continue
             result = {"url": valid_url}
             try:
                 response = download_pdf_from_drive(url)
