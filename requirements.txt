@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+requests
+PyPDF2
+langchain
+langchain-community
+langchain-core
+langchain-groq
+email-validator
